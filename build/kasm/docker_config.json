@@ -1,0 +1,9 @@
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://172.16.0.1:3128",
+      "httpsProxy": "http://172.16.0.1:3128",
+      "noProxy": "localhost,127.0.0.1,172.16.0.0/12,10.42.0.0/16,.docker.internal,.svc.cluster.local,kasm_*,proxy"
+    }
+  }
+}

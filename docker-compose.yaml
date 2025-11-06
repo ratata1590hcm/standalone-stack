@@ -1,0 +1,197 @@
+services:
+  k3s:
+    hostname: k3s.docker.internal
+    image: localhost:5000/rancher/k3s:latest
+    build:
+      context: build/k3s
+    command: server
+    tmpfs:
+      - /run
+      - /var/run
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - K3S_TOKEN=k3s_token_local
+      - K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
+      - K3S_KUBECONFIG_MODE=666
+    volumes:
+      - /root/.kube/config:/output/kubeconfig.yaml
+      - k3s-server:/var/lib/rancher/k3s
+      - k3s-server-log:/var/log
+      - k3s-server-cni:/var/lib/cni
+      - k3s-server-kubelet:/var/lib/kubelet
+      - /workspace/share:/workspace/share
+    ports:
+      - 6443:6443
+    # network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "kubectl get --raw='/readyz?verbose' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.2
+
+  dockerd:
+    hostname: dockerd.docker.internal
+    image: localhost:5000/library/docker:latest
+    build:
+      context: build/docker
+    privileged: true
+    restart: unless-stopped
+    command: --insecure-registry registry.docker.internal:5000
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    ports:
+      - 2375:2375
+    # network_mode: host
+    volumes:
+      - /workspace/docker_data:/var/lib/docker
+      - /workspace/share:/workspace/share
+    healthcheck:
+      test: ["CMD", "/bin/sh", "-c", "nc -z localhost 2375 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.3
+
+  registry:
+    hostname: registry.docker.internal
+    image: localhost:5000/library/registry:latest
+    build:
+      context: build/registry
+    restart: unless-stopped
+    ports:
+      - 5000:5000
+    volumes:
+      - /workspace/registry_data:/var/lib/registry
+    healthcheck:
+      test: [ "CMD", "/bin/sh", "-c", "registry garbage-collect /etc/docker/registry/config.yml" ]
+      interval: 12h
+      timeout: 30s
+      retries: 3
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.4
+
+  git:
+    hostname: git.docker.internal
+    image: localhost:5000/library/git:latest
+    build:
+      context: build/git
+    restart: unless-stopped
+    ports:
+      - 8022:8022
+    volumes:
+      # http://localhost:8022/git/<repo>.git by create_repo
+      - /workspace/git_data:/git
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.5
+
+  webtop:
+    hostname: webtop.docker.internal
+    image: localhost:5000/linuxserver/webtop:latest
+    build:
+      context: build/webtop
+    privileged: true
+    security_opt:
+      - apparmor:rootlesskit
+    environment:
+      - PUID=0
+      - PGID=0
+      - CUSTOM_PORT=8444
+      - PASSWORD=Password_Webtop
+    volumes:
+      - /root:/root
+      - /workspace/share:/workspace/share
+      - /:/hostdir
+    ports:
+      - 8444:8444
+    shm_size: "1gb"
+    restart: unless-stopped
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.6
+
+  kasm:
+    hostname: kasm.docker.internal
+    image: localhost:5000/linuxserver/kasm:latest
+    build:
+      context: build/kasm
+    privileged: true
+    security_opt:
+      - apparmor:rootlesskit
+    environment:
+      - KASM_PORT=443
+      - DOCKER_MTU=1500
+    volumes:
+      - kasm-opt:/opt
+      - kasm-docker-data:/var/lib/docker
+      - /workspace/kasm/profiles:/profiles
+      - /workspace/share:/workspace/share
+      - /root/.docker/config.json:/root/.docker/config.json
+      - /dev/input:/dev/input
+      - /run/udev/data:/run/udev/data
+    ports:
+      # - 3000:3000
+      - 443:443
+    restart: unless-stopped
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           capabilities: [gpu]
+    #           count: all
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.7
+
+  ollama:
+    hostname: ollama.docker.internal
+    image: localhost:5000/library/ollama:latest
+    build:
+      context: build/ollama
+    ports:
+      - 11434:11434
+    environment:
+      - NO_PROXY=${NO_PROXY},0.0.0.0
+      - no_proxy=${NO_PROXY},0.0.0.0
+      - OLLAMA_ORIGINS=*
+    volumes:
+      - /workspace/ollama-data:/root/.ollama
+    restart: unless-stopped
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           capabilities: [gpu]
+    #           count: all
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.8
+
+networks:
+  k3s_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+
+volumes:
+  k3s-server: {}
+  k3s-server-log: {}
+  k3s-server-cni: {}
+  k3s-server-kubelet: {}
+  kasm-opt: {}
+  kasm-docker-data: {}

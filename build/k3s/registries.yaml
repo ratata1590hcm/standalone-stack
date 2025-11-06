@@ -1,0 +1,9 @@
+mirrors:
+  docker.io:
+    endpoint:
+      - "http://registry.docker.internal:5000"
+
+configs:
+  "registry.docker.internal:5000":
+    tls:
+      insecure_skip_verify: true
