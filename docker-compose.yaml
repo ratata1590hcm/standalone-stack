@@ -185,13 +185,35 @@ services:
     image: portainer/portainer-ce:latest
     restart: always
     ports:
-      - 19000:9000
+      - 19000:9443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
     networks:
       k3s_net:
         ipv4_address: 172.18.0.9
+
+  unsloth:
+    hostname: unsloth.docker.internal
+    image: unsloth/unsloth:stable
+    restart: unless-stopped
+    environment:
+      - JUPYTER_PORT=8888
+      - JUPYTER_PASSWORD=Password_Unsloth
+    ports:
+      - 8888:8888
+    volumes:
+      - /workspace/work:/workspace/work
+      - /workspace/notebooks:/workspace/notebooks
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           capabilities: [gpu]
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.10
 
 networks:
   k3s_net:
