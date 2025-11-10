@@ -1,0 +1,7 @@
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+http_proxy="http://172.16.0.1:3128"
+https_proxy="http://172.16.0.1:3128"
+HTTP_PROXY="http://172.16.0.1:3128"
+HTTPS_PROXY="http://172.16.0.1:3128"
+no_proxy="localhost,127.0.0.1,172.16.0.0/12,10.42.0.0/16,.docker.internal,.svc.cluster.local"
+NO_PROXY="localhost,127.0.0.1,172.16.0.0/12,10.42.0.0/16,.docker.internal,.svc.cluster.local"

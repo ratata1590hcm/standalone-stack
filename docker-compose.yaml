@@ -195,9 +195,15 @@ services:
 
   unsloth:
     hostname: unsloth.docker.internal
-    image: unsloth/unsloth:stable
+    image: localhost:5000/unsloth/unsloth:stable
+    build:
+      context: build/unsloth
     restart: unless-stopped
+    user: root
+    privileged: true
+    shm_size: 4096m
     environment:
+      - USER=root
       - JUPYTER_PORT=8888
       - JUPYTER_PASSWORD=Password_Unsloth
     ports:
