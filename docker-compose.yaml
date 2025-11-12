@@ -242,7 +242,7 @@ services:
       - 8081:8081
     networks:
       k3s_net:
-        ipv4_address: 172.18.0.11
+        ipv4_address: 172.18.0.12
 
 networks:
   k3s_net:
