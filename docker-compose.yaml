@@ -1,42 +1,43 @@
 services:
-  k3s:
-    hostname: k3s.docker.internal
-    image: localhost:5000/rancher/k3s:latest
-    build:
-      context: build/k3s
-    command: server
-    tmpfs:
-      - /run
-      - /var/run
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 65535
-        hard: 65535
-    privileged: true
-    restart: unless-stopped
-    environment:
-      - K3S_TOKEN=k3s_token_local
-      - K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
-      - K3S_KUBECONFIG_MODE=666
-    volumes:
-      - /root/.kube/config:/output/kubeconfig.yaml
-      - k3s-server:/var/lib/rancher/k3s
-      - k3s-server-log:/var/log
-      - k3s-server-cni:/var/lib/cni
-      - k3s-server-kubelet:/var/lib/kubelet
-      - /workspace/share:/workspace/share
-    ports:
-      - 6443:6443
-    # network_mode: host
-    healthcheck:
-      test: ["CMD-SHELL", "kubectl get --raw='/readyz?verbose' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      k3s_net:
-        ipv4_address: 172.18.0.2
+
+  # k3s:
+  #   hostname: k3s.docker.internal
+  #   image: localhost:5000/rancher/k3s:latest
+  #   build:
+  #     context: build/k3s
+  #   command: server
+  #   tmpfs:
+  #     - /run
+  #     - /var/run
+  #   ulimits:
+  #     nproc: 65535
+  #     nofile:
+  #       soft: 65535
+  #       hard: 65535
+  #   privileged: true
+  #   restart: unless-stopped
+  #   environment:
+  #     - K3S_TOKEN=k3s_token_local
+  #     - K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
+  #     - K3S_KUBECONFIG_MODE=666
+  #   volumes:
+  #     - /root/.kube/config:/output/kubeconfig.yaml
+  #     - k3s-server:/var/lib/rancher/k3s
+  #     - k3s-server-log:/var/log
+  #     - k3s-server-cni:/var/lib/cni
+  #     - k3s-server-kubelet:/var/lib/kubelet
+  #     - /workspace/share:/workspace/share
+  #   ports:
+  #     - 6443:6443
+  #   # network_mode: host
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "kubectl get --raw='/readyz?verbose' || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     k3s_net:
+  #       ipv4_address: 172.18.0.2
 
   dockerd:
     hostname: dockerd.docker.internal
@@ -131,19 +132,18 @@ services:
     security_opt:
       - apparmor:rootlesskit
     environment:
-      - KASM_PORT=443
+      - KASM_PORT=7443
       - DOCKER_MTU=1500
     volumes:
       - kasm-opt:/opt
       - kasm-docker-data:/var/lib/docker
       - /workspace/kasm/profiles:/profiles
       - /workspace/share:/workspace/share
-      - /root/.docker/config.json:/root/.docker/config.json
       - /dev/input:/dev/input
       - /run/udev/data:/run/udev/data
     ports:
       # - 3000:3000
-      - 443:443
+      - 7443:7443
     restart: unless-stopped
     # deploy:
     #   resources:

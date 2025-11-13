@@ -1,0 +1,11 @@
+# first master
+curl -sfL https://get.k3s.io | K3S_TOKEN=SECRET sh -s - server \
+    --cluster-init
+
+# join master
+# cat /var/lib/rancher/k3s/server/node-token
+curl -sfL https://get.k3s.io | K3S_TOKEN=node-token sh -s - server \
+    --server https://master_domain:6443
+
+# join agent
+curl -sfL https://get.k3s.io | K3S_TOKEN=SECRET sh -s - agent --server https://master_domain:6443
