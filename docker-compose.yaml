@@ -222,6 +222,7 @@ services:
         ipv4_address: 172.18.0.10
 
   nginx:
+    hostname: nginx.docker.internal
     image: nginx:latest
     # ports:
     #   - 8888:8888
@@ -234,6 +235,7 @@ services:
         ipv4_address: 172.18.0.11
 
   nexus:
+    hostname: nexus.docker.internal
     image: sonatype/nexus3:latest
     restart: always
     volumes:
@@ -243,6 +245,23 @@ services:
     networks:
       k3s_net:
         ipv4_address: 172.18.0.12
+
+  nfs:
+    hostname: nfs.docker.internal
+    image: erichough/nfs-server:latest
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - 2049:2049
+    environment:
+      NFS_EXPORT_0: /workspace/share *(rw,sync,no_subtree_check,no_root_squash)
+    volumes:
+      - /workspace/share:/workspace/share
+    networks:
+      k3s_net:
+        ipv4_address: 172.18.0.13
 
 networks:
   k3s_net:
